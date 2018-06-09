@@ -1,7 +1,5 @@
 "use strict";
 
-/* D3.js */
-
 const maxScore = 500;
 const maxComment = 500;
 const maxStory = 10;
@@ -55,7 +53,6 @@ g.selectAll("path, .tick line")
 g.selectAll(".tick text")
     .style("fill", "grey");
 
-/* Hacker News API */
 
 let firebase = "https://hacker-news.firebaseio.com";
 let newstories = "/v0/newstories.json";
@@ -77,20 +74,21 @@ highItemsBox.append("br");
 function showItem(id, div) {
 
     let item = items[id];
-    
-    div.append("span")
-	.text("(" + item.score + " point" + (item.score>1?"s":"") + " | ");
-    
-    div.append("span").append("a")
-	.attr("href", "https://news.ycombinator.com/item?id=" + id)
-	.text(item.descendants+" comment"+(item.descendants>1?"s":""));
+    let title = item.title;
+    let url = item.url;
+    let score = item.score;
+    let descendants = item.descendants;
 
-    div.append("span").text(") ");
-    
+    div.append("span")
+	.text("(" + score + " point" + (score > 1 ? "s" : "") + " | ");
     div.append("span").append("a")
-	.attr("href", item.url)
-	.text(item.title);
-    
+	.text(descendants + " comment" + (descendants > 1 ? "s" : ""))
+	.attr("href", "https://news.ycombinator.com/item?id=" + id);
+    div.append("span")
+        .text(") ");
+    div.append("span").append("a")
+	.text(title)
+	.attr("href", url);
     div.append("br");
 }
 
