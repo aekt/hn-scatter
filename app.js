@@ -108,7 +108,7 @@ function plotItem(id) {
 	.attr("class", `dot${id}`)
         .attr("cx", xScale(x))
 	.attr("cy", yScale(y))
-	.attr("r", scatterSize)
+	.attr("r", Math.max(2, scatterSize * (x/maxScore + y/maxComment)))
 	.on("mouseover", () => {
 	    if (currentItem != id) {
 		currentItem = id;
