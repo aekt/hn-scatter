@@ -1,130 +1,143 @@
 "use strict";
 
-let firebase = "https://hacker-news.firebaseio.com";
+/* D3.js */
 
+const maxScore = 500;
+const maxComment = 500;
+const maxStory = 10;
+
+const margin = {top: 30, right: 30, bottom: 30, left: 30};
+const maxTick = 5;
+const scatterSize = 7;
+
+const svgWidth = 600;
+const svgHeight = 600;
+const width = svgWidth - margin.left - margin.right;
+const height = svgHeight - margin.top - margin.bottom;
+
+let xScale = d3.scaleLinear()
+    .domain([0, maxScore])
+    .range([0, width]);
+
+let yScale = d3.scaleLinear()
+    .domain([0, maxComment])
+    .range([height, 0]);
+
+let xAxis = d3.axisBottom(xScale)
+    .ticks(maxTick)
+    .tickSize(-height); 
+
+let yAxis = d3.axisLeft(yScale)
+    .ticks(maxTick)
+    .tickSize(-width);
+
+let plot = d3.select("body").append("div");
+plot.attr("align", "center");
+
+let svg = plot.append("svg")
+    .attr("width", svgWidth)
+    .attr("height", svgHeight);
+
+let g = svg.append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+g.append("g")
+    .attr("transform", `translate(0, ${height})`)
+    .call(xAxis);
+
+g.append("g")
+    .call(yAxis);
+
+g.selectAll("path, .tick line")
+    .style("stroke", "#eee")
+    .style("stroke-width", 2);
+
+g.selectAll(".tick text")
+    .style("fill", "grey");
+
+/* Hacker News API */
+
+let firebase = "https://hacker-news.firebaseio.com";
 let newstories = "/v0/newstories.json";
 let topstories = "/v0/topstories.json";
 let beststories = "/v0/beststories.json";
-
 let getItem = ((id) => "/v0/item/" + id.toString() + ".json");
-let keyFields = ["score", "descendants", "title"];
 
-function fillRow(id) {
-    function fillEntry(e, text) {
-	let span = document.querySelector("#r" + id.toString() + " ." + e);
-	span.appendChild(document.createTextNode(text));
+let items = {};
+let currentItem;
+
+let overItemBox = d3.select("body").append("div");
+let highItemsBox = d3.select("body").append("div");
+
+overItemBox.style("min-height", "3em");
+
+highItemsBox.append("span").text("Over 500 points/comments:");
+highItemsBox.append("br");
+
+function showItem(id, div) {
+
+    let item = items[id];
+    
+    div.append("span")
+	.text("(" + item.score + " point" + (item.score>1?"s":"") + " | ");
+    
+    div.append("span").append("a")
+	.attr("href", "https://news.ycombinator.com/item?id=" + id)
+	.text(item.descendants+" comment"+(item.descendants>1?"s":""));
+
+    div.append("span").text(") ");
+    
+    div.append("span").append("a")
+	.attr("href", item.url)
+	.text(item.title);
+    
+    div.append("br");
+}
+
+function plotItem(id) {
+
+    let x = items[id].score;
+    let y = items[id].descendants;
+
+    if (x == undefined || y == undefined) return;
+
+    if (x > maxScore || y > maxComment) {
+	showItem(id, highItemsBox);
+	return;
     }
     
-    fetch(firebase + getItem(id))
-	.then(resp => resp.json())
-	.then(json => {
-            for (let field of keyFields) {
-                if (json[field] == undefined) continue;
-                fillEntry(field, json[field]);
-            }
+    g.append("circle")
+	.attr("class", `dot${id}`)
+        .attr("cx", xScale(x))
+	.attr("cy", yScale(y))
+	.attr("r", scatterSize)
+	.on("mouseover", () => {
+	    if (currentItem != id) {
+		currentItem = id;
+		overItemBox.selectAll("*").remove();
+		showItem(id, overItemBox);
+	    }
 	});
 }
 
-function makeRow(id) {
-    function makeEntry(cname) {
-        let entry = document.createElement("td");
-        entry.className = cname;
-        return entry;
-    }
-
-    let row = document.createElement("tr");
-    row.id = "r" + id.toString();
-    for (let field of keyFields) {
-	row.appendChild(makeEntry(field));
-    }
-    return row;
-}
-
-function run2() {
-    
-    const svgWidth = 600;
-    const svgHeight = 600;
-    
-    const margin = 30;
-    const maxTick = 5;
-
-    const maxScore = 700;
-    const maxComment = 700;
-    const maxStory = 10;
-
-    const scatterSize = 3;
-
-    let svg = d3.select("body")
-        .append("svg")
-        .attr("width", svgWidth)
-        .attr("height", svgHeight);
-    
-    let xScale = d3.scaleLinear()
-	.domain([0, maxScore])
-	.range([margin, svgWidth - margin])
-        .nice();
-
-    let yScale = d3.scaleLinear()
-	.domain([0, maxComment])
-	.range([svgHeight - margin, margin])
-        .nice();
-    
-    let xAxis = d3.axisBottom(xScale)
-        .ticks(maxTick);
-
-    let yAxis = d3.axisLeft(yScale)
-        .ticks(maxTick);
-
-    function plotStory(id) {
-        
-        svg.append("g")
-            .attr("transform", `translate(0, ${svgHeight-margin})`)
-            .call(xAxis);
-
-        svg.append("g")
-            .attr("transform", `translate(${margin}, 0)`)
-            .call(yAxis);
-
-        fetch(firebase + getItem(id))
-            .then(resp => resp.json())
-            .then(json => {
-                let x = json["score"];
-                let y = json["descendants"];
-                if (x == undefined || y == undefined) return;
-                svg.append("circle")
-                    .attr("cx", xScale(x))
-		    .attr("cy", yScale(y))
-		    .attr("r", scatterSize);
-            });
-    }
-
-    fetch(firebase + topstories)
+function fetchItem(id) {
+    fetch(firebase + getItem(id))
         .then(resp => resp.json())
         .then(json => {
-            let N = Math.min(maxStory, json.length);
-            for (let i = 0; i < N; i++) {
-                plotStory(json[i]);
-            }
+            items[id] = json;
+            plotItem(id);
         });
 }
 
 function run() {
     fetch(firebase + topstories)
-	.then(resp => resp.json())
-	.then(json => {
-	    let table = document.createElement("table");
-	    let tbody = document.createElement("tbody");
-
-            let maxRows = Math.min(10, json.length);
-	    for (let i = 0; i < maxRows; i++) {
-		tbody.appendChild(makeRow(json[i]));
-                fillRow(json[i]);
-	    }
-
-	    table.appendChild(tbody);
-	    document.body.append(table);
-	});
+        .then(resp => resp.json())
+        .then(json => {
+            let maxStory = Math.min(100, json.length);
+            for (let i = 0; i < maxStory; i++) {
+                fetchItem(json[i]);
+            }
+        });
 }
 
 run();
-run2();
