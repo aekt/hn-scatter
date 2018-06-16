@@ -1,6 +1,18 @@
 body {
     margin: 0 auto;
-    padding: 1em;
+    overflow: hidden;
     font-family: sans-serif;
     font-size: 10pt;
+}
+
+a:link circle {
+    fill: #111;
+}
+
+a:visited circle {
+    fill: #bbb;
+}
+
+a:hover circle {
+    fill: #000;
 }
