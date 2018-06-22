@@ -8,7 +8,7 @@ let maxStory = 10;
 
 let margin = {top: 30, right: 30, bottom: 30, left: 30};
 let maxTick = 5;
-let maxRadius = 5;
+let maxRadius = 7;
 
 let svgWidth = document.body.clientWidth;
 let svgHeight = document.body.clientHeight;
@@ -96,7 +96,7 @@ function plotItem(id) {
 
     let x = xScale(score);
     let y = yScale(comment);
-    let r = Math.max(2, maxRadius * (score/maxScore + comment/maxComment));
+    let r = Math.max(3, maxRadius * (score/maxScore + comment/maxComment));
     let offset = r+12;
     let pad = 5;
     let radius = 2;
