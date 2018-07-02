@@ -63,12 +63,6 @@ g.selectAll(".tick text")
 
 // Dots
 
-let firebase = "https://hacker-news.firebaseio.com";
-let newstories = "/v0/newstories.json";
-let topstories = "/v0/topstories.json";
-let beststories = "/v0/beststories.json";
-let getItem = ((id) => "/v0/item/" + id.toString() + ".json");
-
 let items = {};
 
 function plotItem(id) {
@@ -103,7 +97,7 @@ function plotItem(id) {
     
     let a = g.append("a")
         .attr("target", "_blank")
-        .attr("href", url);
+        .attr("href", url || ("https://news.ycombinator.com/item?id="+id));
     
     let c = a.append("circle")
         .attr("cx", x)
@@ -158,6 +152,12 @@ function plotItem(id) {
             .remove();
     });
 }
+
+let firebase = "https://hacker-news.firebaseio.com";
+let topstories = "/v0/topstories.json";
+// let newstories = "/v0/newstories.json";
+// let beststories = "/v0/beststories.json";
+let getItem = ((id) => "/v0/item/" + id.toString() + ".json");
 
 function fetchItem(id) {
     fetch(firebase + getItem(id))
