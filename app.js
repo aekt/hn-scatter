@@ -2,8 +2,8 @@
 
 // Axes
 
-let maxScore = 600;
-let maxComment = 600;
+let maxScore = 500;
+let maxComment = 500;
 let maxStory = 10;
 
 let margin = {top: 30, right: 30, bottom: 30, left: 30};
